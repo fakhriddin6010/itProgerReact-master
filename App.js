@@ -7,12 +7,16 @@ import { Image } from 'react-native';
 import AddFoodScreen from './container/AddFood';
 import FoodDetailScreen from './container/FoodDetail';
 import FoodListScreen from './container/FoodList';
+import MaterialManagementScreen from './container/MaterialManagement';
 import PrepMethodScreen from './container/PrepMethod';
 import ReceiptInputScreen from './container/ReceiptInput';
 import RecipeRecommendationScreen from './container/RecipeRecommendation';
+import RecommendedListScreen from './container/RecommendedList';
+import RecipeDetailScreen from './container/RecipeDetailScreen'; // RecipeDetailScreen import qilindi
 import StatisticsScreen from './container/Statistics';
 import StoreMethodScreen from './container/StoreMethod';
 import SplashScreenComponent from './screens/SplashScreen';
+import HeaderRightIcon from './container/HeaderRightIcon'; // HeaderRightIcon import qilingan
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -20,12 +24,62 @@ const Stack = createStackNavigator();
 function FoodListStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="FoodList" component={FoodListScreen} />
-      <Stack.Screen name="FoodDetail" component={FoodDetailScreen} />
-      <Stack.Screen name="AddFood" component={AddFoodScreen} />
-      <Stack.Screen name="PrepMethod" component={PrepMethodScreen} />
-      <Stack.Screen name="StoreMethod" component={StoreMethodScreen} />
-      <Stack.Screen name="ReceiptInput" component={ReceiptInputScreen} />
+      <Stack.Screen 
+        name="FoodList" 
+        component={FoodListScreen}
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />, // HeaderRightIcon qo'shildi
+        })}
+      />
+      <Stack.Screen 
+        name="FoodDetail" 
+        component={FoodDetailScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
+      <Stack.Screen 
+        name="AddFood" 
+        component={AddFoodScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
+      <Stack.Screen 
+        name="PrepMethod" 
+        component={PrepMethodScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
+      <Stack.Screen 
+        name="StoreMethod" 
+        component={StoreMethodScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
+      <Stack.Screen 
+        name="ReceiptInput" 
+        component={ReceiptInputScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
+      <Stack.Screen 
+        name="MaterialManagement" 
+        component={MaterialManagementScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
+      <Stack.Screen 
+        name="RecipeDetail" // Bu yerda RecipeDetail qo'shildi
+        component={RecipeDetailScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
     </Stack.Navigator>
   );
 }
@@ -33,7 +87,34 @@ function FoodListStack() {
 function RecipeRecommendationStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="RecipeRecommendation" component={RecipeRecommendationScreen} />
+      <Stack.Screen 
+        name="RecipeRecommendation" 
+        component={RecipeRecommendationScreen}
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />, // HeaderRightIcon qo'shildi
+        })}
+      />
+      <Stack.Screen 
+        name="RecommendedList" 
+        component={RecommendedListScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
+      <Stack.Screen 
+        name="MaterialManagement" 
+        component={MaterialManagementScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
+      <Stack.Screen 
+        name="RecipeDetail" // Bu yerda RecipeDetail qo'shildi
+        component={RecipeDetailScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
+        })}
+      />
     </Stack.Navigator>
   );
 }
@@ -41,7 +122,13 @@ function RecipeRecommendationStack() {
 function StatisticsStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Statistics" component={StatisticsScreen} />
+      <Stack.Screen 
+        name="Statistics" 
+        component={StatisticsScreen} 
+        options={({ navigation }) => ({
+          headerRight: () => <HeaderRightIcon navigation={navigation} />, // HeaderRightIcon qo'shildi
+        })}
+      />
     </Stack.Navigator>
   );
 }

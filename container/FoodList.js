@@ -18,7 +18,6 @@ export default function FoodList({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.title}>조회</Text>
         <TouchableOpacity style={styles.menuButton}>
-          <Image source={require('../assets/options.png')} style={styles.menuIcon} />
         </TouchableOpacity>
       </View>
       <TextInput
