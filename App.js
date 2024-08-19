@@ -7,16 +7,16 @@ import { Image } from 'react-native';
 import AddFoodScreen from './container/AddFood';
 import FoodDetailScreen from './container/FoodDetail';
 import FoodListScreen from './container/FoodList';
+import HeaderRightIcon from './container/HeaderRightIcon'; // HeaderRightIcon import qilingan
 import MaterialManagementScreen from './container/MaterialManagement';
 import PrepMethodScreen from './container/PrepMethod';
 import ReceiptInputScreen from './container/ReceiptInput';
+import RecipeDetailScreen from './container/RecipeDetailScreen'; // RecipeDetailScreen import qilindi
 import RecipeRecommendationScreen from './container/RecipeRecommendation';
 import RecommendedListScreen from './container/RecommendedList';
-import RecipeDetailScreen from './container/RecipeDetailScreen'; // RecipeDetailScreen import qilindi
 import StatisticsScreen from './container/Statistics';
 import StoreMethodScreen from './container/StoreMethod';
 import SplashScreenComponent from './screens/SplashScreen';
-import HeaderRightIcon from './container/HeaderRightIcon'; // HeaderRightIcon import qilingan
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
