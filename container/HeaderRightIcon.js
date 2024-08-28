@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, Image } from 'react-native';
+import { Image, Modal, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 
 export default function HeaderRightIcon() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -10,28 +10,29 @@ export default function HeaderRightIcon() {
 
   return (
     <>
-      <TouchableOpacity onPress={toggleModal} style={{ paddingRight: 20, paddingTop:20 }}>
-        <Image source={require('../assets/options.png')} style={{ width: 28, height: 26 }} />
+      <TouchableOpacity onPress={toggleModal} style={styles.iconContainer}>
+        <Image source={require('../assets/options.png')} style={styles.icon} />
       </TouchableOpacity>
 
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View style={{ width: 300, backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Options</Text>
-            <TouchableOpacity onPress={() => { console.log("Login pressed"); }}>
-              <Text style={{ marginVertical: 10 }}>Login</Text>
+        onRequestClose={toggleModal}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Options</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => { console.log("Login pressed"); }}>
+              <Text style={styles.modalButtonText}>Login</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { console.log("About pressed"); }}>
-              <Text style={{ marginVertical: 10 }}>About</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => { console.log("About pressed"); }}>
+              <Text style={styles.modalButtonText}>About</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={toggleModal}>
-              <Text style={{ color: 'red', marginVertical: 10 }}>Close</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => { console.log("Setting pressed"); }}>
+              <Text style={styles.modalButtonText}>Setting</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.modalButton, styles.logoutButton]} onPress={toggleModal}>
+              <Text style={[styles.modalButtonText, styles.logoutText]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -39,3 +40,58 @@ export default function HeaderRightIcon() {
     </>
   );
 }
+
+// Styles
+const styles = StyleSheet.create({
+  iconContainer: {
+    paddingRight: 20,
+    paddingTop: 20,
+  },
+  icon: {
+    width: 28,
+    height: 26,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: 300,
+    backgroundColor: '#b8bbd1', // Modal oynasining orqa foni
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  modalButton: {
+    width: '100%',
+    padding: 15,
+    marginVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#6A7CA6', // `#b8bbd1` rangiga mos keluvchi quyuqroq rang
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: 'red', // Logout red 
+  },
+  logoutText: {
+    color: 'white',
+  },
+});
