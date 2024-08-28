@@ -2,16 +2,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
-import { Image } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
 import AddFoodScreen from './container/AddFood';
 import FoodDetailScreen from './container/FoodDetail';
 import FoodListScreen from './container/FoodList';
-import HeaderRightIcon from './container/HeaderRightIcon'; // HeaderRightIcon import qilingan
+import HeaderRightIcon from './container/HeaderRightIcon';
 import MaterialManagementScreen from './container/MaterialManagement';
 import PrepMethodScreen from './container/PrepMethod';
 import ReceiptInputScreen from './container/ReceiptInput';
-import RecipeDetailScreen from './container/RecipeDetailScreen'; // RecipeDetailScreen import qilindi
+import RecipeDetailScreen from './container/RecipeDetailScreen';
 import RecipeRecommendationScreen from './container/RecipeRecommendation';
 import RecommendedListScreen from './container/RecommendedList';
 import StatisticsScreen from './container/Statistics';
@@ -23,12 +23,12 @@ const Stack = createStackNavigator();
 
 function FoodListStack() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={styles.stackScreen}>
       <Stack.Screen 
         name="FoodList" 
         component={FoodListScreen}
         options={({ navigation }) => ({
-          headerRight: () => <HeaderRightIcon navigation={navigation} />, // HeaderRightIcon qo'shildi
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
         })}
       />
       <Stack.Screen 
@@ -74,7 +74,7 @@ function FoodListStack() {
         })}
       />
       <Stack.Screen 
-        name="RecipeDetail" // Bu yerda RecipeDetail qo'shildi
+        name="RecipeDetail" 
         component={RecipeDetailScreen} 
         options={({ navigation }) => ({
           headerRight: () => <HeaderRightIcon navigation={navigation} />,
@@ -86,12 +86,12 @@ function FoodListStack() {
 
 function RecipeRecommendationStack() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={styles.stackScreen}>
       <Stack.Screen 
         name="RecipeRecommendation" 
         component={RecipeRecommendationScreen}
         options={({ navigation }) => ({
-          headerRight: () => <HeaderRightIcon navigation={navigation} />, // HeaderRightIcon qo'shildi
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
         })}
       />
       <Stack.Screen 
@@ -109,7 +109,7 @@ function RecipeRecommendationStack() {
         })}
       />
       <Stack.Screen 
-        name="RecipeDetail" // Bu yerda RecipeDetail qo'shildi
+        name="RecipeDetail" 
         component={RecipeDetailScreen} 
         options={({ navigation }) => ({
           headerRight: () => <HeaderRightIcon navigation={navigation} />,
@@ -121,12 +121,12 @@ function RecipeRecommendationStack() {
 
 function StatisticsStack() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={styles.stackScreen}>
       <Stack.Screen 
         name="Statistics" 
         component={StatisticsScreen} 
         options={({ navigation }) => ({
-          headerRight: () => <HeaderRightIcon navigation={navigation} />, // HeaderRightIcon qo'shildi
+          headerRight: () => <HeaderRightIcon navigation={navigation} />,
         })}
       />
     </Stack.Navigator>
@@ -135,7 +135,11 @@ function StatisticsStack() {
 
 function MainTabs() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator 
+      screenOptions={{
+        tabBarStyle: styles.tabBar,
+      }}
+    >
       <Tab.Screen 
         name="FoodListStack" 
         component={FoodListStack} 
@@ -175,19 +179,41 @@ function MainTabs() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Splash">
-        <Stack.Screen 
-          name="Splash" 
-          component={SplashScreenComponent} 
-          options={{ headerShown: false }} 
-        />
-        <Stack.Screen 
-          name="Main" 
-          component={MainTabs} 
-          options={{ headerShown: false }} 
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={styles.container}>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Splash" screenOptions={styles.stackScreen}>
+          <Stack.Screen 
+            name="Splash" 
+            component={SplashScreenComponent} 
+            options={{ headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="Main" 
+            component={MainTabs} 
+            options={{ headerShown: false }} 
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }
+
+// StyleSheet
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#b8bbd1', // Asosiy background rang
+  },
+  stackScreen: {
+    headerStyle: {
+      backgroundColor: '#b8bbd1', // Stack header background rangi
+    },
+    headerTintColor: '#fff', // Header matn rangi
+    headerTitleStyle: {
+      fontWeight: 'bold',
+    },
+  },
+  tabBar: {
+    backgroundColor: '#b8bbd1', // Tab bar background rangi
+  },
+});
