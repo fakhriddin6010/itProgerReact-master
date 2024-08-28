@@ -17,9 +17,11 @@ import RecommendedListScreen from './container/RecommendedList';
 import StatisticsScreen from './container/Statistics';
 import StoreMethodScreen from './container/StoreMethod';
 import SplashScreenComponent from './screens/SplashScreen';
+import LoginScreen from './navigation/LoginScreen'; // LoginScreen import qilindi
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
 
 function FoodListStack() {
   return (
@@ -79,6 +81,11 @@ function FoodListStack() {
         options={({ navigation }) => ({
           headerRight: () => <HeaderRightIcon navigation={navigation} />,
         })}
+      />
+      <Stack.Screen 
+        name="Login"  // LoginScreen qo'shildi
+        component={LoginScreen} 
+        options={{ headerShown: false }} 
       />
     </Stack.Navigator>
   );

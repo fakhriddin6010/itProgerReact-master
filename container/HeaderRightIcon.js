@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { Image, Modal, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 
-export default function HeaderRightIcon() {
+export default function HeaderRightIcon({ navigation }) { 
   const [modalVisible, setModalVisible] = useState(false);
 
   const toggleModal = () => {
     setModalVisible(!modalVisible);
+  };
+
+  const handleLoginPress = () => {
+    setModalVisible(false);
+    navigation.navigate('Login'); // LoginScreen ga navigatsiya
   };
 
   return (
@@ -22,7 +27,7 @@ export default function HeaderRightIcon() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Options</Text>
-            <TouchableOpacity style={styles.modalButton} onPress={() => { console.log("Login pressed"); }}>
+            <TouchableOpacity style={styles.modalButton} onPress={handleLoginPress}>
               <Text style={styles.modalButtonText}>Login</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalButton} onPress={() => { console.log("About pressed"); }}>
