@@ -1,15 +1,74 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
 
-export default function App() {
+
+import React, { useState, useEffect } from 'react';
+import { FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+export default function FoodList({ navigation }) {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [foods, setFoods] = useState([]); // Dastlab bo'sh array sifatida boshlang
+
+  // API so'rovi va ma'lumotlarni olish
+  useEffect(() => {
+    fetch('http://192.168.10.1:8081/api/fooditems/1')  // API manzilini tekshiring va yangilang
+      .then(response => response.json())
+      .then(data => {
+        console.log('Fetched data:', data); // Ma'lumotlarni konsolda tekshirish
+        setFoods(data);  // Ma'lumotlarni state'ga yuklash
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
+  const filteredFoods = Array.isArray(foods) ? foods.filter(food => filter === 'all' || food.storage === filter) : [];
+
   return (
     <View style={styles.container}>
-      {/* <StatusBar style="auto" /> */}
-      <View style={styles.box1}>
-        <Text style={styles.box1}>fahriddin</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>조회</Text>
+        <TouchableOpacity style={styles.menuButton}>
+        </TouchableOpacity>
       </View>
-      <View style={styles.box2}></View>
-      <View style={styles.box3}></View>
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Search"
+        value={search}
+        onChangeText={setSearch}
+      />
+      <View style={styles.filterButtons}>
+        <TouchableOpacity onPress={() => setFilter('all')} style={[styles.filterButton, filter === 'all' && styles.selected]}>
+          <Text style={styles.filterButtonText}>전체</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setFilter('fridge')} style={[styles.filterButton, filter === 'fridge' && styles.selected]}>
+          <Text style={styles.filterButtonText}>냉장</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setFilter('freezer')} style={[styles.filterButton, filter === 'freezer' && styles.selected]}>
+          <Text style={styles.filterButtonText}>냉동</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setFilter('room')} style={[styles.filterButton, filter === 'room' && styles.selected]}>
+          <Text style={styles.filterButtonText}>실온</Text>
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={filteredFoods}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => navigation.navigate('FoodDetail', { foodId: item.id })}>
+            <View style={styles.foodItem}>
+              <Image source={{ uri: item.image }} style={styles.foodImage} />
+              <View style={styles.foodInfo}>
+                <Text style={styles.foodName}>{item.name}</Text>
+                <Text style={styles.foodExpiry}>유통기한: {item.expiry}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item) => item.id.toString()}
+        style={styles.foodList}
+      />
+      <TouchableOpacity onPress={() => navigation.navigate('ReceiptInput')} style={styles.addButton}>
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -17,21 +76,93 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: '#fff',
-    // alignItems: 'center',
-    // justifyContent: 'center',
+    padding: 14,
+    backgroundColor: '#fff',
   },
-  box1:{
-    flex:1,
-    backgroundColor: 'yellow',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  box2:{
-    flex:2,
-    backgroundColor: 'red',
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
-  box3:{
-    flex:3,
-    backgroundColor: 'green',
+  menuButton: {
+    padding: 10,
   },
-  
+  menuIcon: {
+    width: 28,
+    height: 27,
+  },
+  searchBar: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingLeft: 8,
+    marginBottom: 16,
+    borderRadius: 8,
+  },
+  filterButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  filterButton: {
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#ddd',
+  },
+  selected: {
+    backgroundColor: '#0a84ff',
+  },
+  filterButtonText: {
+    color: '#fff',
+  },
+  foodList: {
+    marginBottom: 80,
+  },
+  foodItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'grey',
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#f9f9f9',
+  },
+  foodImage: {
+    width: 54,
+    height: 56,
+    marginRight: 16,
+  },
+  foodInfo: {
+    flex: 1,
+  },
+  foodName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  foodExpiry: {
+    fontSize: 12,
+    color: '#888',
+  },
+  addButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 90,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#0a84ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
 });

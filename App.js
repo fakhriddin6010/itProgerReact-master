@@ -16,8 +16,8 @@ import RecipeRecommendationScreen from './container/RecipeRecommendation';
 import RecommendedListScreen from './container/RecommendedList';
 import StatisticsScreen from './container/Statistics';
 import StoreMethodScreen from './container/StoreMethod';
-import SplashScreenComponent from './screens/SplashScreen';
 import LoginScreen from './navigation/LoginScreen'; // LoginScreen import qilindi
+import SplashScreenComponent from './screens/SplashScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
