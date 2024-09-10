@@ -1,6 +1,6 @@
 import Slider from '@react-native-community/slider';
 import React from 'react';
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
 export default function FoodDetail({ route, navigation }) {
   const { foodId } = route.params;
@@ -24,7 +24,7 @@ export default function FoodDetail({ route, navigation }) {
 
   const handleConsume = async () => {
     try {
-      const response = await fetch('https://172.17.185.237:8080', {
+      const response = await fetch('https://your-backend-url/api/foods/consume', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export default function FoodDetail({ route, navigation }) {
 
   const handleDispose = async () => {
     try {
-      const response = await fetch('https://172.17.185.237:8080', {
+      const response = await fetch('https://your-backend-url/api/foods/dispose', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
