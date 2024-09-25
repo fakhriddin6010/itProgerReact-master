@@ -181,7 +181,7 @@ export default function InquiryScreen({ route }) {
             renderItem={({ item }) => (
               <View style={styles.listItem}>
                 <Text style={styles.listItemText}>
-                  {item.foodName}: {item.quantity} 단위
+                  {item.foodName}: {item.quantity} 개
                 </Text>
                 <Text style={styles.listItemCost}>가격: {item.price}원</Text>
               </View>

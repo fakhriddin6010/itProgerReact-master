@@ -1,44 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Alert } from 'react-native';
+import { StyleSheet, Text, View, Alert, ActivityIndicator, Picker, FlatList } from 'react-native';
 
-export default function PrepMethod({ route }) {
-  const { foodId } = route.params;
+export default function StorageMethod() {
+  const DEVICE_ID = 'SM_N986NZNEKTC'; // Replace with dynamic device ID if needed
 
-  const [prepMethod, setPrepMethod] = useState('');
+  const [storageMethod, setStorageMethod] = useState('REFRIGERATOR');
+  const [foodItems, setFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 예제 데이터
-  const foods = [
-    { id: '1', name: '양파' },
-    { id: '2', name: '당근' },
-    { id: '3', name: '파프리카' },
-  ];
-
-  const food = foods.find(f => f.id === foodId);
-
   useEffect(() => {
-    if (food) {
-      fetchPrepMethod(food.name);
-    } else {
-      Alert.alert('오류', '해당 식품을 찾을 수 없습니다.');
-      setLoading(false);
-    }
-  }, [food]);
+    fetchFoodItems(storageMethod);
+  }, [storageMethod]);
 
-  const fetchPrepMethod = async (name) => {
+  const fetchFoodItems = async (method) => {
+    setLoading(true);
     try {
-      const response = await fetch(`http://172.17.186.119:8080/api/recipes/handling?name=${encodeURIComponent(name)}`, {
-        method: 'POST',
+      const response = await fetch(`http://172.17.186.37:8080/api/fooditems/${DEVICE_ID}/storage/${method}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-  
+
       if (response.ok) {
-        const result = await response.text(); // 서버로부터 손질 방법 텍스트를 받아옴
-        setPrepMethod(result);
+        const result = await response.json(); // Assuming the response is JSON
+        setFoodItems(result);
       } else {
-        Alert.alert('오류', '손질 방법을 가져오는 중 문제가 발생했습니다.');
+        Alert.alert('오류', '식품 목록을 가져오는 중 문제가 발생했습니다.');
       }
     } catch (error) {
       console.error('API 요청 오류:', error);
@@ -47,28 +35,39 @@ export default function PrepMethod({ route }) {
       setLoading(false);
     }
   };
-  
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text>로딩 중...</Text>
-      </View>
-    );
-  }
-
-  if (!prepMethod) {
-    return (
-      <View style={styles.container}>
-        <Text>손질 방법을 찾을 수 없습니다.</Text>
-      </View>
-    );
-  }
+  const renderItem = ({ item }) => (
+    <View style={styles.itemContainer}>
+      <Text style={styles.itemName}>{item.name}</Text>
+      {/* Add more item details if available */}
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{food.name} 손질 방법</Text>
-      <Text style={styles.content}>{prepMethod}</Text>
+      <Text style={styles.title}>보관 방법 별 식품 목록</Text>
+      <Picker
+        selectedValue={storageMethod}
+        style={styles.picker}
+        onValueChange={(itemValue) => setStorageMethod(itemValue)}
+      >
+        <Picker.Item label="냉장고 (REFRIGERATOR)" value="REFRIGERATOR" />
+        <Picker.Item label="냉동고 (FREEZER)" value="FREEZER" />
+        <Picker.Item label="실온 (ROOM_TEMPERATURE)" value="ROOM_TEMPERATURE" />
+      </Picker>
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+      ) : foodItems.length > 0 ? (
+        <FlatList
+          data={foodItems}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+        />
+      ) : (
+        <Text style={styles.noDataText}>해당 보관 방법에 대한 식품이 없습니다.</Text>
+      )}
     </View>
   );
 }
@@ -83,8 +82,31 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    textAlign: 'center',
   },
-  content: {
+  picker: {
+    height: 50,
+    width: '100%',
+    marginBottom: 16,
+  },
+  loader: {
+    marginTop: 20,
+  },
+  list: {
+    paddingBottom: 20,
+  },
+  itemContainer: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+  },
+  itemName: {
+    fontSize: 18,
+  },
+  noDataText: {
+    textAlign: 'center',
+    marginTop: 20,
     fontSize: 16,
+    color: '#555',
   },
 });

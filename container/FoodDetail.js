@@ -1,11 +1,13 @@
-import Slider from '@react-native-community/slider';
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Slider from '@react-native-community/slider';
+import axios from 'axios';
 
 export default function FoodDetail({ route, navigation }) {
   const { foodId } = route.params;
-  const [consumptionValue, setConsumptionValue] = React.useState(0);
+  const [consumptionValue, setConsumptionValue] = useState(0);
 
+  // Ma'lumotlarni mock qilish
   const foods = [
     { id: '1', name: '양파', expiry: '24-05-16', image: require('../assets/onion.png') },
     { id: '2', name: '당근', expiry: '24-05-12', image: require('../assets/carrot1.png') },
@@ -22,42 +24,52 @@ export default function FoodDetail({ route, navigation }) {
     );
   }
 
+  // API ga "Consume" so'rovini yuborish
   const handleConsume = async () => {
     try {
-      const response = await fetch('https://172.17.185.237:8080', {
-        method: 'POST',
+      const response = await axios.post('https://172.17.184.145:8080', {
+        foodId: food.id,
+        consumptionValue: consumptionValue, // Iste'mol qilingan miqdorni ham yuborish
+      }, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer YOUR_API_TOKEN', // Agar kerak bo'lsa
         },
-        body: JSON.stringify({ foodId: food.id }),
       });
-      if (response.ok) {
+
+      if (response.status === 200) {
         Alert.alert('소비 완료', `${food.name}를(을) 소비했습니다.`);
-        navigation.navigate('FoodList');
+        navigation.navigate('FoodList'); // Qayta yo'naltirish
       } else {
-        Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
+        throw new Error('오류');
       }
     } catch (error) {
+      console.error('Error during consumption:', error);
       Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
     }
   };
 
+  // API ga "Dispose" so'rovini yuborish
   const handleDispose = async () => {
     try {
-      const response = await fetch('https://172.17.185.237:8080', {
-        method: 'POST',
+      const response = await axios.post('https://172.17.184.145:8080', {
+        foodId: food.id,
+        consumptionValue: consumptionValue, // Tashlangan miqdorni ham yuborish
+      }, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer YOUR_API_TOKEN', // Agar kerak bo'lsa
         },
-        body: JSON.stringify({ foodId: food.id }),
       });
-      if (response.ok) {
+
+      if (response.status === 200) {
         Alert.alert('음식물 배출', `${food.name}를(을) 배출했습니다.`);
-        navigation.navigate('FoodList');
+        navigation.navigate('FoodList'); // Qayta yo'naltirish
       } else {
-        Alert.alert('오류', '배출 처리 중 오류가 발생했습니다.');
+        throw new Error('오류');
       }
     } catch (error) {
+      console.error('Error during disposal:', error);
       Alert.alert('오류', '배출 처리 중 오류가 발생했습니다.');
     }
   };
