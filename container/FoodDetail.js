@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Slider from '@react-native-community/slider';
-import axios from 'axios';
+import React from 'react';
+import { Alert, Text, View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
 export default function FoodDetail({ route, navigation }) {
   const { foodId } = route.params;
-  const [consumptionValue, setConsumptionValue] = useState(0);
+  const [consumptionValue, setConsumptionValue] = React.useState(0);
 
-  // Ma'lumotlarni mock qilish
   const foods = [
-    { id: '1', name: '양파', expiry: '24-05-16', image: require('../assets/onion.png') },
-    { id: '2', name: '당근', expiry: '24-05-12', image: require('../assets/carrot1.png') },
-    { id: '3', name: '파프리카', expiry: '24-05-10', image: require('../assets/pepper.png') },
+    { id: '1', foodname: '양파', expiry: '2024-08-15',quantity : '5', image: require('../assets/onion.png') },
+    { id: '2', foodname: '당근', expiry: '2024-08-12',quantity : '2', image: require('../assets/carrot1.png') },
+    { id: '3', foodname: '파프리카', expiry: '2024-07-29',quantity : '3', image: require('../assets/pepper.png') }
   ];
 
   const food = foods.find(f => f.id === foodId);
@@ -24,52 +22,40 @@ export default function FoodDetail({ route, navigation }) {
     );
   }
 
-  // API ga "Consume" so'rovini yuborish
+  // 가짜 API 테스트용 함수
+  const fakeApiTest = (url, data) => {
+    return new Promise((resolve) => {
+      console.log(`Fake API 호출됨: ${url}, 데이터:`, data);
+      setTimeout(() => {
+        resolve({ status: 200, message: 'Success' });
+      }, 1000); // 1초 후에 응답
+    });
+  };
+
   const handleConsume = async () => {
     try {
-      const response = await axios.post('https://172.17.184.145:8080', {
-        foodId: food.id,
-        consumptionValue: consumptionValue, // Iste'mol qilingan miqdorni ham yuborish
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_TOKEN', // Agar kerak bo'lsa
-        },
-      });
-
+      const response = await fakeApiTest('https://fake-api.com/consume', { foodId: food.id });
       if (response.status === 200) {
-        Alert.alert('소비 완료', `${food.name}를(을) 소비했습니다.`);
-        navigation.navigate('FoodList'); // Qayta yo'naltirish
+        Alert.alert('소비 완료', `${food.foodname}를(을) 소비했습니다.`);
+        navigation.navigate('FoodList');
       } else {
-        throw new Error('오류');
+        Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
       }
     } catch (error) {
-      console.error('Error during consumption:', error);
       Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
     }
   };
 
-  // API ga "Dispose" so'rovini yuborish
   const handleDispose = async () => {
     try {
-      const response = await axios.post('https://172.17.184.145:8080', {
-        foodId: food.id,
-        consumptionValue: consumptionValue, // Tashlangan miqdorni ham yuborish
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_TOKEN', // Agar kerak bo'lsa
-        },
-      });
-
+      const response = await fakeApiTest('https://fake-api.com/dispose', { foodId: food.id });
       if (response.status === 200) {
-        Alert.alert('음식물 배출', `${food.name}를(을) 배출했습니다.`);
-        navigation.navigate('FoodList'); // Qayta yo'naltirish
+        Alert.alert('음식물 배출', `${food.foodname}를(을) 배출했습니다.`);
+        navigation.navigate('FoodList');
       } else {
-        throw new Error('오류');
+        Alert.alert('오류', '배출 처리 중 오류가 발생했습니다.');
       }
     } catch (error) {
-      console.error('Error during disposal:', error);
       Alert.alert('오류', '배출 처리 중 오류가 발생했습니다.');
     }
   };
@@ -90,8 +76,9 @@ export default function FoodDetail({ route, navigation }) {
       <View style={styles.foodInfoContainer}>
         <Image source={food.image} style={styles.foodImage} />
         <View style={styles.foodInfo}>
-          <Text style={styles.foodName}>{food.name}</Text>
+          <Text style={styles.foodName}>{food.foodname}</Text>
           <Text style={styles.foodExpiry}>유통기한: {food.expiry}</Text>
+          <Text style={styles.foodExpiry}>갯수: {food.quantity}</Text>
         </View>
       </View>
       <View style={styles.section}>
@@ -100,7 +87,7 @@ export default function FoodDetail({ route, navigation }) {
           value={consumptionValue}
           onValueChange={setConsumptionValue}
           minimumValue={0}
-          maximumValue={100}
+          maximumValue={parseInt(food.quantity, 10)}
           step={1}
           style={styles.slider}
         />
@@ -191,7 +178,7 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#0a84ff',
+    backgroundColor: '#667080',
     alignItems: 'center',
     flex: 1,
     margin: 5,
