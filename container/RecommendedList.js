@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 
 // 백엔드 API URL 설정
-const BACKEND_API_URL = 'http://172.17.186.37:8080/api/recipes/top';  // 인기 레시피 목록
-const RECIPE_DETAILS_API_URL = 'http://172.17.186.37:8080/api/recipes/details';  // 레시피 세부 정보
+const BACKEND_API_URL = 'http://172.17.185.199:8080/api/recipes/top';  // 인기 레시피 목록
+const RECIPE_DETAILS_API_URL = 'http://172.17.185.199:8080/api/recipes/details';  // 레시피 세부 정보
 
 export default function RecommendedListScreen({ route, navigation }) {
   const { type = '인기 레시피' } = route.params || {};  // 기본값 설정

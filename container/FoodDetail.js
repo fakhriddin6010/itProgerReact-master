@@ -1,4 +1,5 @@
 import Slider from '@react-native-community/slider';
+import { Picker } from '@react-native-picker/picker';
 import React from 'react';
 import { Alert, Text, View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
@@ -7,9 +8,9 @@ export default function FoodDetail({ route, navigation }) {
   const [consumptionValue, setConsumptionValue] = React.useState(0);
 
   const foods = [
-    { id: '1', foodname: '양파', expiry: '2024-08-15',quantity : '5', image: require('../assets/onion.png') },
-    { id: '2', foodname: '당근', expiry: '2024-08-12',quantity : '2', image: require('../assets/carrot1.png') },
-    { id: '3', foodname: '파프리카', expiry: '2024-07-29',quantity : '3', image: require('../assets/pepper.png') }
+    { id: '1', foodname: '양파', expiry: '2024-08-15', quantity: '5', image: require('../assets/onion.png') },
+    { id: '2', foodname: '당근', expiry: '2024-08-12', quantity: '2', image: require('../assets/carrot1.png') },
+    { id: '3', foodname: '파프리카', expiry: '2024-07-29', quantity: '3', image: require('../assets/pepper.png') }
   ];
 
   const food = foods.find(f => f.id === foodId);
@@ -22,19 +23,31 @@ export default function FoodDetail({ route, navigation }) {
     );
   }
 
-  // 가짜 API 테스트용 함수
+  // Fake API function
   const fakeApiTest = (url, data) => {
     return new Promise((resolve) => {
       console.log(`Fake API 호출됨: ${url}, 데이터:`, data);
       setTimeout(() => {
         resolve({ status: 200, message: 'Success' });
-      }, 1000); // 1초 후에 응답
+      }, 1000); // 1-second response simulation
     });
   };
 
+  // Fake statistics updating function
+  const updateFakeStatistics = (foodName, quantity) => {
+    return new Promise((resolve) => {
+      console.log(`Fake API: ${foodName}, Quantity: ${quantity}`);
+      setTimeout(() => {
+        resolve({ status: 200, message: 'Success', data: { foodName, quantity } });
+      }, 1000);  // Simulated delay
+    });
+  };
+
+  // Oziq-ovqat iste'mol qilganda yoki chiqarilganda chaqiriladigan funksiya
   const handleConsume = async () => {
     try {
-      const response = await fakeApiTest('https://fake-api.com/consume', { foodId: food.id });
+      // This should call updateFakeStatistics, not fakeApiTest
+      const response = await updateFakeStatistics(food.foodname, consumptionValue);
       if (response.status === 200) {
         Alert.alert('소비 완료', `${food.foodname}를(을) 소비했습니다.`);
         navigation.navigate('FoodList');
@@ -46,6 +59,7 @@ export default function FoodDetail({ route, navigation }) {
     }
   };
 
+  // Handle food disposal
   const handleDispose = async () => {
     try {
       const response = await fakeApiTest('https://fake-api.com/dispose', { foodId: food.id });
@@ -60,10 +74,12 @@ export default function FoodDetail({ route, navigation }) {
     }
   };
 
+  // Handle preparation method navigation
   const handlePrepMethod = () => {
     navigation.navigate('PrepMethod', { foodId });
   };
 
+  // Handle storage method navigation
   const handleStoreMethod = () => {
     navigation.navigate('StoreMethod', { foodId });
   };

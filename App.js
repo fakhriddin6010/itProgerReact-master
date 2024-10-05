@@ -16,7 +16,7 @@ import RecipeRecommendationScreen from './container/RecipeRecommendation';
 import RecommendedListScreen from './container/RecommendedList';
 import StatisticsScreen from './container/Statistics';
 import StoreMethodScreen from './container/StoreMethod';
-import SplashScreenComponent from './screens/SplashScreen';
+import SplashScreenComponent from './src/SplashScreen';
 import AlarmSettingsScreen from './container/AlarmSettingsScreen'; // 알림 설정 화면 추가
 import SelectedIngredientsScreen from './container/SelectedIngredients'; // 선택된 재료 화면 추가
 

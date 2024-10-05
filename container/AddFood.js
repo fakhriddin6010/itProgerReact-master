@@ -28,7 +28,7 @@ export default function AddFoodScreen({ route, navigation }) {
     }));
 
     try {
-      const response = await fetch('http://172.17.186.37:8080/api/fooditems/list', {
+      const response = await fetch('http://172.17.185.199:8080/api/fooditems/list', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
