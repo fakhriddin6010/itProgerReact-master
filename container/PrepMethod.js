@@ -1,32 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Alert, ActivityIndicator, Picker, FlatList } from 'react-native';
+import { StyleSheet, Text, View, Alert } from 'react-native';
+import API_BASE_URL from './config'; // API_BASE_URL 가져오기
 
-export default function StorageMethod() {
-  const DEVICE_ID = 'SM_N986NZNEKTC'; // Replace with dynamic device ID if needed
+export default function PrepMethod({ route }) {
+  const { foodId } = route.params;
 
-  const [storageMethod, setStorageMethod] = useState('REFRIGERATOR');
-  const [foodItems, setFoodItems] = useState([]);
+  const [prepMethod, setPrepMethod] = useState('');
   const [loading, setLoading] = useState(true);
+  const [hasFetched, setHasFetched] = useState(false); // API 호출이 완료되었는지 여부를 저장
+
+  // 예제 데이터
+  const foods = [
+    { id: '1', name: '양파' },
+    { id: '2', name: '당근' },
+    { id: '3', name: '파프리카' },
+  ];
+
+  const food = foods.find(f => f.id === foodId);
 
   useEffect(() => {
-    fetchFoodItems(storageMethod);
-  }, [storageMethod]);
+    if (food && !hasFetched) {
+      fetchPrepMethod(food.name);  // 손질 방법 가져오기
+    } else if (!food) {
+      Alert.alert('오류', '해당 식품을 찾을 수 없습니다.');
+      setLoading(false);
+    }
+    // hasFetched가 변경되지 않도록 의존성 배열에 추가하지 않음
+  }, [food]);  // food가 변경될 때만 호출
 
-  const fetchFoodItems = async (method) => {
-    setLoading(true);
+  const fetchPrepMethod = async (name) => {
+    if (hasFetched) return; // 이미 호출되었다면 중복 요청 방지
+
     try {
-      const response = await fetch(`http://172.17.186.37:8080/api/fooditems/${DEVICE_ID}/storage/${method}`, {
-        method: 'GET',
+      const response = await fetch(`${API_BASE_URL}/api/recipes/handling?name=${encodeURIComponent(name)}`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
       if (response.ok) {
-        const result = await response.json(); // Assuming the response is JSON
-        setFoodItems(result);
+        const result = await response.text();
+        setPrepMethod(result);
+        setHasFetched(true); // API 호출 완료 상태로 설정
       } else {
-        Alert.alert('오류', '식품 목록을 가져오는 중 문제가 발생했습니다.');
+        Alert.alert('오류', '손질 방법을 가져오는 중 문제가 발생했습니다.');
       }
     } catch (error) {
       console.error('API 요청 오류:', error);
@@ -36,38 +54,26 @@ export default function StorageMethod() {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.itemName}>{item.name}</Text>
-      {/* Add more item details if available */}
-    </View>
-  );
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>로딩 중...</Text>
+      </View>
+    );
+  }
+
+  if (!prepMethod) {
+    return (
+      <View style={styles.container}>
+        <Text>손질 방법을 찾을 수 없습니다.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>보관 방법 별 식품 목록</Text>
-      <Picker
-        selectedValue={storageMethod}
-        style={styles.picker}
-        onValueChange={(itemValue) => setStorageMethod(itemValue)}
-      >
-        <Picker.Item label="냉장고 (REFRIGERATOR)" value="REFRIGERATOR" />
-        <Picker.Item label="냉동고 (FREEZER)" value="FREEZER" />
-        <Picker.Item label="실온 (ROOM_TEMPERATURE)" value="ROOM_TEMPERATURE" />
-      </Picker>
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
-      ) : foodItems.length > 0 ? (
-        <FlatList
-          data={foodItems}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-        />
-      ) : (
-        <Text style={styles.noDataText}>해당 보관 방법에 대한 식품이 없습니다.</Text>
-      )}
+      <Text style={styles.title}>{food.name} 손질 방법</Text>
+      <Text style={styles.content}>{prepMethod}</Text>
     </View>
   );
 }
@@ -82,31 +88,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
-    textAlign: 'center',
   },
-  picker: {
-    height: 50,
-    width: '100%',
-    marginBottom: 16,
-  },
-  loader: {
-    marginTop: 20,
-  },
-  list: {
-    paddingBottom: 20,
-  },
-  itemContainer: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-  },
-  itemName: {
-    fontSize: 18,
-  },
-  noDataText: {
-    textAlign: 'center',
-    marginTop: 20,
+  content: {
     fontSize: 16,
-    color: '#555',
   },
 });

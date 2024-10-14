@@ -2,6 +2,8 @@ import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
 import React from 'react';
 import { Alert, Text, View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import axios from 'axios'; // Axios API chaqiruvlar uchun
+import { API_BASE_URL } from './config'; // Haqiqiy API URL'ni import qilish
 
 export default function FoodDetail({ route, navigation }) {
   const { foodId } = route.params;
@@ -23,31 +25,24 @@ export default function FoodDetail({ route, navigation }) {
     );
   }
 
-  // Fake API function
-  const fakeApiTest = (url, data) => {
-    return new Promise((resolve) => {
-      console.log(`Fake API 호출됨: ${url}, 데이터:`, data);
-      setTimeout(() => {
-        resolve({ status: 200, message: 'Success' });
-      }, 1000); // 1-second response simulation
-    });
+  // Haqiqiy API chaqiruvini amalga oshiradigan funksiya
+  const updateStatistics = async (foodName, quantity) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/update-statistics`, {
+        foodName,
+        quantity,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("API Error:", error);
+      throw new Error('API request failed');
+    }
   };
 
-  // Fake statistics updating function
-  const updateFakeStatistics = (foodName, quantity) => {
-    return new Promise((resolve) => {
-      console.log(`Fake API: ${foodName}, Quantity: ${quantity}`);
-      setTimeout(() => {
-        resolve({ status: 200, message: 'Success', data: { foodName, quantity } });
-      }, 1000);  // Simulated delay
-    });
-  };
-
-  // Oziq-ovqat iste'mol qilganda yoki chiqarilganda chaqiriladigan funksiya
+  // Oziq-ovqat iste'mol qilganda chaqiriladigan funksiya
   const handleConsume = async () => {
     try {
-      // This should call updateFakeStatistics, not fakeApiTest
-      const response = await updateFakeStatistics(food.foodname, consumptionValue);
+      const response = await updateStatistics(food.foodname, consumptionValue);
       if (response.status === 200) {
         Alert.alert('소비 완료', `${food.foodname}를(을) 소비했습니다.`);
         navigation.navigate('FoodList');
@@ -59,10 +54,10 @@ export default function FoodDetail({ route, navigation }) {
     }
   };
 
-  // Handle food disposal
+  // Oziq-ovqatni tashlab yuborish uchun API chaqiruvini amalga oshirish
   const handleDispose = async () => {
     try {
-      const response = await fakeApiTest('https://fake-api.com/dispose', { foodId: food.id });
+      const response = await axios.post(`${API_BASE_URL}/dispose`, { foodId: food.id });
       if (response.status === 200) {
         Alert.alert('음식물 배출', `${food.foodname}를(을) 배출했습니다.`);
         navigation.navigate('FoodList');
@@ -74,12 +69,11 @@ export default function FoodDetail({ route, navigation }) {
     }
   };
 
-  // Handle preparation method navigation
+  // Qo'shimcha funksiyalar (masalan, saqlash yoki tayyorlash usuli)
   const handlePrepMethod = () => {
     navigation.navigate('PrepMethod', { foodId });
   };
 
-  // Handle storage method navigation
   const handleStoreMethod = () => {
     navigation.navigate('StoreMethod', { foodId });
   };

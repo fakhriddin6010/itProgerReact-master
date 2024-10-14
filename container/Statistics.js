@@ -5,11 +5,8 @@ import { PieChart } from 'react-native-svg-charts';
 import { G, Text as SVGText } from 'react-native-svg';
 import { useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
+import API_BASE_URL from './config';
 
-const BASE_URL = 'http://3.19.219:8080/api';
-
-
-// Get current year and month
 const getCurrentMonth = () => {
   const now = new Date();
   return { year: now.getFullYear(), month: now.getMonth() + 1 };
@@ -29,7 +26,7 @@ const fetchConsumptionDataByType = async (month, consumptionType, deviceId, setF
   setError(null);
 
   try {
-    const response = await axios.get(`${BASE_URL}/consumption-records/${deviceId}/month/type`, {
+    const response = await axios.get(`${API_BASE_URL}/consumption-records/${deviceId}/month/type`, {
       params: { year: getCurrentMonth().year, month, consumptionType }
     });
     console.log("API Status:", response.status); 
