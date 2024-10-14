@@ -6,7 +6,8 @@ import { G, Text as SVGText } from 'react-native-svg';
 import { useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
 
-const BASE_URL = 'http://172.17.185.199:8080/api';
+const BASE_URL = 'http://3.19.219:8080/api';
+
 
 // Get current year and month
 const getCurrentMonth = () => {
@@ -31,8 +32,8 @@ const fetchConsumptionDataByType = async (month, consumptionType, deviceId, setF
     const response = await axios.get(`${BASE_URL}/consumption-records/${deviceId}/month/type`, {
       params: { year: getCurrentMonth().year, month, consumptionType }
     });
-
-    console.log("API Response:", response.data); // API javobini konsolga chiqaramiz
+    console.log("API Status:", response.status); 
+    console.log("API Response:", response.data); 
 
     const transformedData = response.data.map(item => ({
       key: item[0],
