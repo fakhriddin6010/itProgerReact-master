@@ -11,12 +11,11 @@ export default function AddFoodScreen({ route, navigation }) {
     console.log('extractedText:', extractedText);  // 추출된 텍스트 로그로 확인
   }, [extractedText]);
 
-  // extractedText 값이 없을 때 대비하여 기본 값을 설정
   const initialFoodItems = Array.isArray(extractedText)
     ? extractedText.map(item => ({
-        foodName: item[0] || '', // Agar extractedText noto'g'ri bo'lsa, bo'sh qiymat
-        quantity: item[1] || '1', // Noma'lum holat uchun 1 miqdorni belgilang
-        price: item[2] || '0', // Narxni 0 deb belgilang agar yo'q bo'lsa
+        foodName: item[0],
+        quantity: item[1],
+        price: item[2],
         expiryDate: '',
         storageType: '',
       }))
@@ -42,34 +41,16 @@ export default function AddFoodScreen({ route, navigation }) {
   };
 
   const handleManualInput = async () => {
-    // 데이터가 유효한지 확인하는 함수
-    const isValidInput = (item) => {
-      return (
-        item.foodName.trim() !== '' &&
-        !isNaN(parseFloat(item.price)) &&
-        !isNaN(parseFloat(item.quantity)) &&
-        item.storageType !== '' &&
-        /^\d{4}-\d{2}-\d{2}$/.test(item.expiryDate) // expirationDate가 YYYY-MM-DD 형식인지 확인
-      );
-    };
+    const data = foodItems.map((item) => ({
+      deviceId: Device.modelId || Device.osInternalBuildId || '',
+      foodName: item.foodName || '',
+      price: parseFloat(item.price) || 0,
+      quantity: parseFloat(item.quantity) || 0,
+      expirationDate: item.expiryDate || '',
+      registeredDate: new Date().toISOString(),
+      storageMethod: item.storageType.toUpperCase(),
+    }));
 
-    // 각 항목을 유효한 데이터로 변환
-    const data = foodItems
-      .filter(isValidInput) // Noto'g'ri ma'lumotlarni filtrlash
-      .map((item) => ({
-        deviceId: Device.modelId || Device.osInternalBuildId || '', // deviceId noto'g'ri bo'lsa bo'sh bo'lsin
-        foodName: item.foodName || '',
-        price: parseFloat(item.price) || 0,
-        quantity: parseFloat(item.quantity) || 0,
-        expirationDate: item.expiryDate || '',
-        registeredDate: new Date().toISOString(),
-        storageMethod: item.storageType.toUpperCase(),
-      }));
-
-    // 변환된 데이터를 콘솔에 출력하여 확인
-    console.log('전송된 데이터:', JSON.stringify(data, null, 2));
-
-    // 서버에 POST 요청
     try {
       const response = await fetch(`${API_BASE_URL}/api/fooditems/list`, {
         method: 'POST',
@@ -118,6 +99,7 @@ export default function AddFoodScreen({ route, navigation }) {
                 <View style={styles.inputContainer}>
                   <View style={styles.rowWithDelete}>
                     <Text style={styles.label}>수량</Text>
+                    {/* X 버튼을 수량 레이블 옆으로 이동 */}
                     <TouchableOpacity style={styles.deleteButton} onPress={() => removeFoodItem(index)}>
                       <Text style={styles.deleteButtonText}>X</Text>
                     </TouchableOpacity>

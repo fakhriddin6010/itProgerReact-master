@@ -52,50 +52,60 @@ export default function FoodDetail({ route, navigation }) {
   }
 
   const handleConsume = async () => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/api/fooditems/quantity`, null, {
-        params: {
-          foodItemId: food.foodId,
-          quantityToUpdate: consumptionValue,
-          consumptionType: 'CONSUMED'
-        }
-      });
-      if (response.status === 200) {
-        Alert.alert('소비 완료', `${food.foodName} ${consumptionValue}개를 소비했습니다.`, [
-          { text: '확인', onPress: () => navigation.navigate('FoodList', { refresh: true }) }
-        ]);
-        fetchFoodDetail();
-      } else {
-        Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
-      }
-    } catch (error) {
-      console.error('소비 처리 중 오류 발생:', error);
+  try {
+    const response = await axios.put(`${API_BASE_URL}/api/fooditems/quantity`, null, {
+      params: {
+        foodItemId: food.foodId,
+        quantityToUpdate: consumptionValue,
+        consumptionType: 'CONSUMED',
+      },
+    });
+
+    if (response.status === 200) {
+      Alert.alert('소비 완료', `${food.foodName} ${consumptionValue}개를 소비했습니다.`, [
+        { 
+          text: '확인', 
+          onPress: () => navigation.navigate('Statistics', { refresh: true, consumptionType: 'CONSUMED' }) 
+        } 
+      ]);
+      fetchFoodDetail();
+    } else {
       Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
     }
-  };
+  } catch (error) {
+    console.error('소비 처리 중 오류 발생:', error);
+    Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
+  }
+};
 
-  const handleDispose = async () => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/api/fooditems/quantity`, null, {
-        params: {
-          foodItemId: food.foodId,
-          quantityToUpdate: consumptionValue,  // 사용자가 선택한 수량만큼 배출
-          consumptionType: 'DISCARDED'
-        }
-      });
-      if (response.status === 200) {
-        Alert.alert('음식물 배출', `${food.foodName} ${consumptionValue}개를 배출했습니다.`, [
-          { text: '확인', onPress: () => navigation.navigate('FoodList', { refresh: true }) }
-        ]);
-        fetchFoodDetail();
-      } else {
-        Alert.alert('오류', '배출 처리 중 오류가 발생했습니다.');
-      }
-    } catch (error) {
-      console.error('배출 처리 중 오류 발생:', error);
-      Alert.alert('오류', '배출 처리 중 오류가 발생했습니다.');
+const handleDispose = async () => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/api/fooditems/quantity`, null, {
+      params: {
+        foodItemId: food.foodId,
+        quantityToUpdate: consumptionValue,
+        consumptionType: 'DISCARDED',
+      },
+    });
+
+    if (response.status === 200) {
+      Alert.alert('폐기 완료', `${food.foodName} ${consumptionValue}개를 폐기했습니다.`, [
+        { 
+          text: '확인', 
+          onPress: () => navigation.navigate('Statistics', { refresh: true, consumptionType: 'DISCARDED' }) 
+        } 
+      ]);
+      fetchFoodDetail();
+    } else {
+      Alert.alert('오류', '폐기 처리 중 오류가 발생했습니다.');
     }
-  };
+  } catch (error) {
+    console.error('폐기 처리 중 오류 발생:', error);
+    Alert.alert('오류', '폐기 처리 중 오류가 발생했습니다.');
+  }
+};
+
+  
 
   // "손질 방법" 버튼 클릭 시 손질 방법 화면으로 이동
   const handlePrepMethod = () => {

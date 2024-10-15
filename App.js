@@ -18,7 +18,7 @@ import CustomRecipeDetailScreen from './container/Recipes/CustomRecipeDetailScre
 import StatisticsScreen from './container/Statistics';
 import StoreMethodScreen from './container/StoreMethod';
 import SplashScreenComponent from './src/SplashScreen';
-import RecipeByIngredientsScreen from './container/Recipes/RecipeByIngredientscreen';
+import RecipeByIngredientScreen from './container/Recipes/RecipeByIngredientScreen';
 import AlarmSettingsScreen from './container/AlarmSettingsScreen'; // 알림 설정 화면 추가
 import SelectedIngredientsScreen from './container/SelectedIngredients'; // 선택된 재료 화면 추가
 
@@ -47,6 +47,7 @@ function FoodListStack() {
       <Stack.Screen name="StoreMethod" component={StoreMethodScreen} />
       <Stack.Screen name="ReceiptInput" component={ReceiptInputScreen} />
       <Stack.Screen name="MaterialManagement" component={MaterialManagementScreen} />
+      <Stack.Screen name="Statistics" component={StatisticsScreen} />
       <Stack.Screen 
         name="RecipeDetail" 
         component={RecipeDetailScreen}
@@ -76,7 +77,7 @@ function RecipeRecommendationStack() {
       <Stack.Screen name="RecommendedList" component={RecommendedListScreen} />
       <Stack.Screen name="MaterialManagement" component={MaterialManagementScreen} />
       <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
-      <Stack.Screen name="RecipeByIngredients" component={RecipeByIngredientsScreen} />
+      <Stack.Screen name="RecipeByIngredients" component={RecipeByIngredientScreen} />
       <Stack.Screen name='CustomRecipeDetailScreen' component={CustomRecipeDetailScreen}/>
     </Stack.Navigator>
   );
