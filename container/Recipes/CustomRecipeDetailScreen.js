@@ -1,103 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking, Alert, Modal, TextInput } from 'react-native';
 import * as Device from 'expo-device';
-import API_BASE_URL from './config';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Linking, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import API_BASE_URL from '../config'; // API_BASE_URL 가져오기
 
-export default function RecipeDetailScreen({ route }) {
-  const { recipeDetails, recipeTitle } = route.params; // 전달받은 레시피 정보
-  const [ingredients, setIngredients] = useState('');
-  const [instructions, setInstructions] = useState('');
-  const [customRecipe, setCustomRecipe] = useState(null); // "내 재료로 만들기"로 받은 커스텀 레시피
+export default function CustomRecipeDetailScreen({ route }) {
+  const { recipeTitle } = route.params; // 선택된 메뉴 이름을 받음
+  const [loading, setLoading] = useState(true);
+  const [recipeData, setRecipeData] = useState(null);
   const [deviceId, setDeviceId] = useState('');
-  const [showUseIngredientsButton, setShowUseIngredientsButton] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [parsedIngredients, setParsedIngredients] = useState([]);
-  const [editedIngredients, setEditedIngredients] = useState([]);
+  const [parsedIngredients, setParsedIngredients] = useState([]); // 파싱된 재료 목록
+  const [editedIngredients, setEditedIngredients] = useState([]); // 수정된 재료 목록
 
   useEffect(() => {
     const fetchDeviceId = async () => {
       const id = Device.modelId || Device.osInternalBuildId || 'unknown-device';
       setDeviceId(id);
     };
+
     fetchDeviceId();
   }, []);
 
   useEffect(() => {
-    if (typeof recipeDetails === 'object' && recipeDetails !== null) {
-      const formattedIngredients = recipeDetails.재료
-        ? recipeDetails.재료.split(', ').join('\n')
-        : '재료 정보가 없습니다.';
-      const formattedInstructions = recipeDetails.조리순서
-        ? recipeDetails.조리순서.replace(/(\d\.)/g, '\n$1').trim()
-        : '레시피 정보가 없습니다.';
-      setIngredients(formattedIngredients);
-      setInstructions(formattedInstructions);
-    } else if (typeof recipeDetails === 'string') {
-      const [ing, inst] = recipeDetails.split('\n\n');
-      setIngredients(ing || '재료 정보가 없습니다.');
-      setInstructions(inst || '레시피 정보가 없습니다.');
-    } else {
-      setIngredients('재료 정보가 없습니다.');
-      setInstructions('레시피 정보가 없습니다.');
-    }
-  }, [recipeDetails]);
+    const fetchRecipe = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/recipes/by-name?name=${encodeURIComponent(recipeTitle)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-  const handleSearchVideos = () => {
-    const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(recipeTitle)}`;
-    Linking.openURL(youtubeSearchUrl);
-  };
+        if (!response.ok) {
+          throw new Error('Failed to fetch recipe data');
+        }
 
-  // "내 재료로 만들기" 버튼 클릭 시, 백엔드에서 커스텀 레시피를 받아오는 함수
-  const handleCustomRecipe = async () => {
-    try {
-      const query = `?deviceId=${encodeURIComponent(deviceId)}&recipe=${encodeURIComponent(recipeTitle)}&menu=${encodeURIComponent(recipeTitle)}`;
-      const response = await fetch(`${API_BASE_URL}/api/recipes/modify${query}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ingredients: ['carrot', 'onion'] }),  // 예시로 재료 리스트
-      });
+        const data = await response.json();
+        setRecipeData(data); // 가져온 데이터 저장
 
-      const responseText = await response.text();
-      setCustomRecipe(responseText);
-      setShowUseIngredientsButton(true);
-    } catch (error) {
-      console.error('레시피 가져오기 오류:', error);
-      Alert.alert('오류', '내 재료로 레시피를 가져오는 중 오류가 발생했습니다.');
-    }
-  };
-
-  const handleUseIngredients = async () => {
-    try {
-      if (!customRecipe) {
-        Alert.alert('오류', '커스텀 레시피가 없습니다.');
-        return;
+        // 재료 목록을 파싱된 재료 목록에 넣기
+        const initialIngredients = data["재료"]
+          ? data["재료"].split(',').map(item => {
+              const [name, amount] = item.trim().split(/\s+/); // 재료 이름과 양을 분리
+              return [name, parseFloat(amount) || 1]; // 양이 없으면 기본값 1
+            })
+          : [];
+          
+        setParsedIngredients(initialIngredients);
+        setEditedIngredients(initialIngredients); // 재료 사용 모달에서 수정될 수 있도록 초기화
+      } catch (error) {
+        console.error('Error fetching recipe data:', error);
+        Alert.alert('오류', '레시피 정보를 가져오는 중 문제가 발생했습니다.');
+      } finally {
+        setLoading(false); // 로딩 상태 종료
       }
+    };
 
-      const ingredientsSection = customRecipe.split('재료:')[1]?.split('요리과정:')[0]?.trim();
-
-      if (!ingredientsSection) {
-        Alert.alert('오류', '재료 정보를 찾을 수 없습니다.');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/recipes/parse-ingredients?ingredientsSection=${encodeURIComponent(ingredientsSection)}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const ingredientsJson = await response.json();
-      setParsedIngredients(Object.entries(ingredientsJson));
-      setEditedIngredients(Object.entries(ingredientsJson));
-      setShowModal(true);
-    } catch (error) {
-      console.error('재료 파싱 오류:', error);
-      Alert.alert('오류', '재료를 파싱하는 중 문제가 발생했습니다.');
-    }
-  };
+    fetchRecipe();
+  }, [recipeTitle]);
 
   const handleDeleteIngredient = (index) => {
     const updatedIngredients = editedIngredients.filter((_, i) => i !== index);
@@ -109,7 +69,7 @@ export default function RecipeDetailScreen({ route }) {
     const currentAmount = parseFloat(updatedIngredients[index][1]);
     const newAmount = currentAmount + delta;
 
-    if (newAmount > 0) {
+    if (newAmount > 0) { 
       updatedIngredients[index][1] = newAmount.toFixed(2);
       setEditedIngredients(updatedIngredients);
     }
@@ -137,7 +97,7 @@ export default function RecipeDetailScreen({ route }) {
       }
 
       Alert.alert('성공', '재료를 성공적으로 사용했습니다.');
-      setShowModal(false);
+      setShowModal(false); 
     } catch (error) {
       console.error('재료 사용 오류:', error);
       Alert.alert('오류', '재료를 사용하는 중 문제가 발생했습니다.');
@@ -146,40 +106,49 @@ export default function RecipeDetailScreen({ route }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{recipeTitle}</Text>
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>재료:</Text>
-        <Text style={styles.recipeText}>{ingredients}</Text>
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <View>
+          {recipeData ? (
+            <View>
+              <Text style={styles.title}>{recipeData["요리"]}</Text>
+              
+              {/* 재료 출력 */}
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>재료:</Text>
+                {recipeData["재료"] ? recipeData["재료"].split(',').map((ingredient, index) => (
+                  <Text key={index} style={styles.recipeText}>{ingredient.trim()}</Text>
+                )) : <Text style={styles.recipeText}>재료 정보가 없습니다.</Text>}
+              </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>레시피:</Text>
-        <Text style={styles.recipeText}>{instructions}</Text>
-      </View>
+              {/* 조리 방법 출력 */}
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>레시피:</Text>
+                <Text style={styles.recipeText}>{recipeData["조리순서"] ? recipeData["조리순서"].replace(/(\d\.)/g, '\n$1').trim()
+                : "조리 방법 정보가 없습니다."}</Text>
+              </View>
 
-      {customRecipe && (
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>내 재료로 만든 레시피:</Text>
-          <Text style={styles.recipeText}>{customRecipe}</Text>
+              {/* 재료 사용 버튼 */}
+              <TouchableOpacity style={[styles.button, styles.useIngredientsButton]} onPress={() => setShowModal(true)}>
+                <Text style={styles.buttonText}>재료 사용</Text>
+              </TouchableOpacity>
+
+              {/* 레시피 영상 보기 버튼 */}
+              <TouchableOpacity style={[styles.button, styles.videoButton]} onPress={() => {
+                const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(recipeTitle)}`;
+                Linking.openURL(youtubeSearchUrl);
+              }}>
+                <Text style={styles.buttonText}>레시피 영상 보기</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Text>레시피가 "{recipeTitle}"에 대해 발견되지 않았습니다.</Text>
+          )}
         </View>
       )}
 
-      {!customRecipe && (
-        <TouchableOpacity style={[styles.button, styles.customRecipeButton]} onPress={handleCustomRecipe}>
-          <Text style={styles.buttonText}>내 재료로 만들기</Text>
-        </TouchableOpacity>
-      )}
-
-      {showUseIngredientsButton && (
-        <TouchableOpacity style={[styles.button, styles.useIngredientsButton]} onPress={handleUseIngredients}>
-          <Text style={styles.buttonText}>재료 사용</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity style={[styles.button, styles.videoButton]} onPress={handleSearchVideos}>
-        <Text style={styles.buttonText}>레시피 영상 보기</Text>
-      </TouchableOpacity>
-
+      {/* 재료 사용 모달 */}
       <Modal
         visible={showModal}
         animationType="slide"
@@ -274,9 +243,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 8,
-  },
-  customRecipeButton: {
-    backgroundColor: '#667080',
   },
   useIngredientsButton: {
     backgroundColor: '#DE1010',
