@@ -1,10 +1,10 @@
+//인기 레시피 클릭시 메뉴 추천 화면
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import { API_BASE_URL } from './config';  // API_BASE_URL ni config'dan import qilish
+import API_BASE_URL from '../config'; // 상대 경로로 수정config에서 API_BASE_URL 가져옴
 
-// API URL'larni API_BASE_URL yordamida yaratamiz
-const BACKEND_API_URL = `${API_BASE_URL}/recipes/top`;  // 인기 레시피 목록
-const RECIPE_DETAILS_API_URL = `${API_BASE_URL}/recipes/details`;  // 레시피 세부 정보
+const BACKEND_API_URL = `${API_BASE_URL}/api/recipes/top`;  // 인기 레시피 목록
+const RECIPE_DETAILS_API_URL = `${API_BASE_URL}/api/recipes/details`;  // 레시피 세부 정보
 
 export default function RecommendedListScreen({ route, navigation }) {
   const { type = '인기 레시피' } = route.params || {};  // 기본값 설정
@@ -12,10 +12,10 @@ export default function RecommendedListScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // API'dan 레시피 데이터를 가져오는 함수
+    // 백엔드에서 레시피 데이터를 가져오는 함수
     const fetchRecipes = async () => {
       try {
-        const response = await fetch(BACKEND_API_URL);  // API 호출
+        const response = await fetch(BACKEND_API_URL);  // 백엔드 API 호출
         const data = await response.json();  // JSON 데이터로 변환
 
         setRecipes(data);  // 가져온 데이터를 상태에 저장
@@ -30,13 +30,12 @@ export default function RecommendedListScreen({ route, navigation }) {
   }, [type]);
 
   const handlePress = async (recipe) => {
-    // 레시피 링크를 사용해 API'dan 재료 및 레시피 정보 가져오기
     try {
       const response = await fetch(`${RECIPE_DETAILS_API_URL}?link=${encodeURIComponent(recipe.link)}`);
-      const details = await response.text();  // API'dan 받은 문자열 데이터를 텍스트로 변환
+      const details = await response.text();  // 백엔드에서 받은 문자열 데이터를 텍스트로 변환
 
-      // RecipeDetailScreen으로 이동하고 레시피 정보 전달
-      navigation.navigate('RecipeDetail', { recipeDetails: details });
+      // RecipeDetailScreen으로 이동하고 레시피 정보와 메뉴 이름(title)을 전달
+      navigation.navigate('RecipeDetail', { recipeDetails: details, recipeTitle: recipe.title });
     } catch (error) {
       console.error('Error fetching recipe details:', error);
     }

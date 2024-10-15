@@ -13,10 +13,12 @@ import PrepMethodScreen from './container/PrepMethod';
 import ReceiptInputScreen from './container/ReceiptInput';
 import RecipeDetailScreen from './container/Recipes/RecipeDetailScreen';
 import RecipeRecommendationScreen from './container/Recipes/RecipeRecommendation';
-import RecommendedListScreen from './container/RecommendedList';
+import RecommendedListScreen from './container/Recipes/RecommendedList';
+import CustomRecipeDetailScreen from './container/Recipes/CustomRecipeDetailScreen'
 import StatisticsScreen from './container/Statistics';
 import StoreMethodScreen from './container/StoreMethod';
 import SplashScreenComponent from './src/SplashScreen';
+import RecipeByIngredientsScreen from './container/Recipes/RecipeByIngredientscreen';
 import AlarmSettingsScreen from './container/AlarmSettingsScreen'; // 알림 설정 화면 추가
 import SelectedIngredientsScreen from './container/SelectedIngredients'; // 선택된 재료 화면 추가
 
@@ -74,6 +76,8 @@ function RecipeRecommendationStack() {
       <Stack.Screen name="RecommendedList" component={RecommendedListScreen} />
       <Stack.Screen name="MaterialManagement" component={MaterialManagementScreen} />
       <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
+      <Stack.Screen name="RecipeByIngredients" component={RecipeByIngredientsScreen} />
+      <Stack.Screen name='CustomRecipeDetailScreen' component={CustomRecipeDetailScreen}/>
     </Stack.Navigator>
   );
 }

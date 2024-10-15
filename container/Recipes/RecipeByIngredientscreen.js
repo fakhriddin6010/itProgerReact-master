@@ -11,7 +11,7 @@ export default function RecipeByIngredientsScreen({ route, navigation }) {
 
   useEffect(() => {
     const fetchRecipesByIngredients = async () => {
-      const deviceId = Device.modelId || Device.osInternalBuildId || 'unknown-device'; // 디바이스 ID 가져오기
+      const deviceId = Device.modelId || Device.osInternalBuildId || 'SM_N986NZNEKTC'; // 디바이스 ID 가져오기
 
       try {
         const response = await fetch(`${API_BASE_URL}/api/recipes/recommendation/${deviceId}`, {

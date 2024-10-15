@@ -1,25 +1,24 @@
-//식품 추가 (직접입력 틀)
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as Device from 'expo-device';
 import API_BASE_URL from './config';  // config.js에서 IP 주소 가져오기
 
 export default function AddFoodScreen({ route, navigation }) {
-  const { mode, extractedText } = route.params || {};  // extractedText 받기
+  const { extractedText } = route.params || {};  // extractedText 받기
 
   // extractedText가 제대로 전달되었는지 확인 (디버깅 용)
   useEffect(() => {
     console.log('extractedText:', extractedText);  // 추출된 텍스트 로그로 확인
   }, [extractedText]);
 
-  // extractedText가 배열이라면 이를 각각 분리하여 foodItems에 넣음
+  // extractedText 값이 없을 때 대비하여 기본 값을 설정
   const initialFoodItems = Array.isArray(extractedText)
     ? extractedText.map(item => ({
-        foodName: item[0], // 인식된 식품 이름
-        quantity: item[1], // 인식된 수량
-        price: item[2],    // 인식된 가격
-        expiryDate: '',    // 유통기한 (사용자가 입력)
-        storageType: '',   // 보관 방법 (사용자가 선택)
+        foodName: item[0] || '', // Agar extractedText noto'g'ri bo'lsa, bo'sh qiymat
+        quantity: item[1] || '1', // Noma'lum holat uchun 1 miqdorni belgilang
+        price: item[2] || '0', // Narxni 0 deb belgilang agar yo'q bo'lsa
+        expiryDate: '',
+        storageType: '',
       }))
     : [{ foodName: '', quantity: '', price: '', expiryDate: '', storageType: '' }];
 
@@ -35,19 +34,44 @@ export default function AddFoodScreen({ route, navigation }) {
     setFoodItems([...foodItems, { foodName: '', quantity: '', expiryDate: '', storageType: '', price: '' }]);
   };
 
-  const handleManualInput = async () => {
-    const data = foodItems.map((item) => ({
-      deviceId: Device.modelId || Device.osInternalBuildId || 'SM_N986NZNEKTC',
-      foodName: item.foodName || '',
-      price: parseFloat(item.price) || 0,
-      quantity: parseFloat(item.quantity) || 0,
-      expirationDate: item.expiryDate || '',
-      registeredDate: new Date().toISOString(),
-      storageMethod: item.storageType.toUpperCase(),
-    }));
+  // 항목 삭제 핸들러
+  const removeFoodItem = (index) => {
+    const updatedItems = [...foodItems];
+    updatedItems.splice(index, 1);  // 해당 인덱스의 항목을 삭제
+    setFoodItems(updatedItems);
+  };
 
+  const handleManualInput = async () => {
+    // 데이터가 유효한지 확인하는 함수
+    const isValidInput = (item) => {
+      return (
+        item.foodName.trim() !== '' &&
+        !isNaN(parseFloat(item.price)) &&
+        !isNaN(parseFloat(item.quantity)) &&
+        item.storageType !== '' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(item.expiryDate) // expirationDate가 YYYY-MM-DD 형식인지 확인
+      );
+    };
+
+    // 각 항목을 유효한 데이터로 변환
+    const data = foodItems
+      .filter(isValidInput) // Noto'g'ri ma'lumotlarni filtrlash
+      .map((item) => ({
+        deviceId: Device.modelId || Device.osInternalBuildId || '', // deviceId noto'g'ri bo'lsa bo'sh bo'lsin
+        foodName: item.foodName || '',
+        price: parseFloat(item.price) || 0,
+        quantity: parseFloat(item.quantity) || 0,
+        expirationDate: item.expiryDate || '',
+        registeredDate: new Date().toISOString(),
+        storageMethod: item.storageType.toUpperCase(),
+      }));
+
+    // 변환된 데이터를 콘솔에 출력하여 확인
+    console.log('전송된 데이터:', JSON.stringify(data, null, 2));
+
+    // 서버에 POST 요청
     try {
-      const response = await fetch(`${API_BASE_URL}/api/fooditems/list`, {  // API_BASE_URL 사용
+      const response = await fetch(`${API_BASE_URL}/api/fooditems/list`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,8 +80,14 @@ export default function AddFoodScreen({ route, navigation }) {
       });
 
       if (response.ok) {
-        Alert.alert('식품 추가 완료', '식품이 성공적으로 추가되었습니다.');
-        navigation.navigate('FoodList', { newFood: data });
+        Alert.alert('식품 추가 완료', '식품이 성공적으로 추가되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              navigation.navigate('FoodList', { newFood: data }); // 새로 추가된 식품 데이터 전달
+            },
+          },
+        ]);
       } else {
         const errorMessage = await response.text();
         console.error(`서버 응답 오류: ${response.status}, 메시지: ${errorMessage}`);
@@ -86,10 +116,15 @@ export default function AddFoodScreen({ route, navigation }) {
                   />
                 </View>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.label}>수량</Text>
+                  <View style={styles.rowWithDelete}>
+                    <Text style={styles.label}>수량</Text>
+                    <TouchableOpacity style={styles.deleteButton} onPress={() => removeFoodItem(index)}>
+                      <Text style={styles.deleteButtonText}>X</Text>
+                    </TouchableOpacity>
+                  </View>
                   <TextInput
                     style={styles.input}
-                    value={String(item.quantity)}  // 수량은 숫자이므로 String으로 변환
+                    value={String(item.quantity)}
                     onChangeText={(value) => handleInputChange(index, 'quantity', value)}
                     placeholder="수량을 입력하세요."
                     keyboardType="numeric"
@@ -97,13 +132,12 @@ export default function AddFoodScreen({ route, navigation }) {
                 </View>
               </View>
 
-              {/* 가격 입력 필드 */}
               <View style={styles.row}>
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>가격</Text>
                   <TextInput
                     style={styles.input}
-                    value={String(item.price)}  // 가격도 숫자이므로 String으로 변환
+                    value={String(item.price)}
                     onChangeText={(value) => handleInputChange(index, 'price', value)}
                     placeholder="가격을 입력하세요."
                     keyboardType="numeric"
@@ -160,14 +194,12 @@ export default function AddFoodScreen({ route, navigation }) {
             </View>
           ))}
 
-          {/* + 버튼 추가 */}
           <TouchableOpacity style={styles.addNewButton} onPress={addNewFoodItem}>
             <Text style={styles.addNewButtonText}>+ 식품 추가</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* 추가하기 버튼을 화면 하단에 고정 */}
       <View style={styles.fixedButtonContainer}>
         <TouchableOpacity style={styles.addButton} onPress={handleManualInput}>
           <Text style={styles.addButtonText}>추가하기</Text>
@@ -199,15 +231,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 2,
+    position: 'relative',  
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 16,
+    alignItems: 'center',  // 삭제 버튼과 수량을 수평으로 맞춤
+  },
+  rowWithDelete: {
+    flexDirection: 'row',
+    alignItems: 'center',  // 수량 레이블과 X 버튼을 수평으로 맞춤
   },
   inputContainer: {
     flex: 1,
     marginRight: 8,
+  },
+
+  deleteButton: {
+    marginLeft: 135, 
+    marginTop: -15, // 수량 레이블과 X 버튼 사이 간격
+    borderRadius: 12,
+    padding: 5,
+    backgroundColor: 'transparent',  // 배경색 제거
+  },
+  deleteButtonText: {
+    color: '#333',  // 글자 색상을 검은색으로 설정
+    fontSize: 16,
+    lineHeight: 16,  // 글자를 더 위로 올리기 위한 높이 조정
   },
   label: {
     fontSize: 14,

@@ -1,82 +1,114 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { Picker } from '@react-native-picker/picker';
-import React from 'react';
-import { Alert, Text, View, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import axios from 'axios'; // Axios API chaqiruvlar uchun
-import { API_BASE_URL } from './config'; // Haqiqiy API URL'ni import qilish
+import axios from 'axios';
+import API_BASE_URL from './config';
 
 export default function FoodDetail({ route, navigation }) {
-  const { foodId } = route.params;
-  const [consumptionValue, setConsumptionValue] = React.useState(0);
+  const { foodId } = route.params;  // FoodList에서 전달된 식재료 ID
+  const [food, setFood] = useState(null);  // DB에서 가져온 식재료 정보를 저장할 상태
+  const [consumptionValue, setConsumptionValue] = useState(0);  // 소비할 식재료 양
 
-  const foods = [
-    { id: '1', foodname: '양파', expiry: '2024-08-15', quantity: '5', image: require('../assets/onion.png') },
-    { id: '2', foodname: '당근', expiry: '2024-08-12', quantity: '2', image: require('../assets/carrot1.png') },
-    { id: '3', foodname: '파프리카', expiry: '2024-07-29', quantity: '3', image: require('../assets/pepper.png') }
-  ];
+  const placeholderImage = 'https://via.placeholder.com/150'; // 기본 Placeholder 이미지 URL
 
-  const food = foods.find(f => f.id === foodId);
+  // 식재료 정보를 DB에서 가져오는 함수
+  const fetchFoodDetail = async () => {
+    try {
+      console.log(`API 요청 URL: ${API_BASE_URL}/api/fooditems/details/${foodId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/fooditems/details/${foodId}`);
+      console.log('API 응답:', response); // API에서 받은 전체 응답 로그
+      console.log('응답 데이터:', response.data); // 응답 데이터 로그
+
+      if (response.status === 200 && response.data) {
+        // 배열 데이터를 객체 형태로 변환하여 사용
+        const [id, foodName, price, quantity, expirationDate] = response.data;
+        setFood({
+          foodId: id,
+          foodName: foodName || '식품 이름 없음',
+          quantity: quantity || 0,
+          expirationDate: expirationDate || '정보 없음',
+          price: price || '정보 없음',
+        });
+      } else {
+        console.log('API에서 유효한 데이터를 받지 못했습니다.');
+        Alert.alert('오류', '식품 정보를 찾을 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('API 요청 중 오류 발생:', error); // API 요청 중 에러 로그
+      Alert.alert('오류', '식품 정보를 불러오는 중 오류가 발생했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    fetchFoodDetail();  // 컴포넌트가 처음 렌더링될 때 식재료 정보 가져오기
+  }, [foodId]);
 
   if (!food) {
     return (
       <View style={styles.container}>
-        <Text>식품 정보를 찾을 수 없습니다.</Text>
+        <Text>식품 정보를 불러오는 중입니다...</Text>
       </View>
     );
   }
 
-  // Haqiqiy API chaqiruvini amalga oshiradigan funksiya
-  const updateStatistics = async (foodName, quantity) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/update-statistics`, {
-        foodName,
-        quantity,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("API Error:", error);
-      throw new Error('API request failed');
-    }
-  };
-
-  // Oziq-ovqat iste'mol qilganda chaqiriladigan funksiya
   const handleConsume = async () => {
     try {
-      const response = await updateStatistics(food.foodname, consumptionValue);
+      const response = await axios.put(`${API_BASE_URL}/api/fooditems/quantity`, null, {
+        params: {
+          foodItemId: food.foodId,
+          quantityToUpdate: consumptionValue,
+          consumptionType: 'CONSUMED'
+        }
+      });
       if (response.status === 200) {
-        Alert.alert('소비 완료', `${food.foodname}를(을) 소비했습니다.`);
-        navigation.navigate('FoodList');
+        Alert.alert('소비 완료', `${food.foodName} ${consumptionValue}개를 소비했습니다.`, [
+          { text: '확인', onPress: () => navigation.navigate('FoodList', { refresh: true }) }
+        ]);
+        fetchFoodDetail();
       } else {
         Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
       }
     } catch (error) {
+      console.error('소비 처리 중 오류 발생:', error);
       Alert.alert('오류', '소비 처리 중 오류가 발생했습니다.');
     }
   };
 
-  // Oziq-ovqatni tashlab yuborish uchun API chaqiruvini amalga oshirish
   const handleDispose = async () => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/dispose`, { foodId: food.id });
+      const response = await axios.put(`${API_BASE_URL}/api/fooditems/quantity`, null, {
+        params: {
+          foodItemId: food.foodId,
+          quantityToUpdate: consumptionValue,  // 사용자가 선택한 수량만큼 배출
+          consumptionType: 'DISCARDED'
+        }
+      });
       if (response.status === 200) {
-        Alert.alert('음식물 배출', `${food.foodname}를(을) 배출했습니다.`);
-        navigation.navigate('FoodList');
+        Alert.alert('음식물 배출', `${food.foodName} ${consumptionValue}개를 배출했습니다.`, [
+          { text: '확인', onPress: () => navigation.navigate('FoodList', { refresh: true }) }
+        ]);
+        fetchFoodDetail();
       } else {
         Alert.alert('오류', '배출 처리 중 오류가 발생했습니다.');
       }
     } catch (error) {
+      console.error('배출 처리 중 오류 발생:', error);
       Alert.alert('오류', '배출 처리 중 오류가 발생했습니다.');
     }
   };
 
-  // Qo'shimcha funksiyalar (masalan, saqlash yoki tayyorlash usuli)
+  // "손질 방법" 버튼 클릭 시 손질 방법 화면으로 이동
   const handlePrepMethod = () => {
-    navigation.navigate('PrepMethod', { foodId });
+    navigation.navigate('PrepMethod', { foodId: food.foodName });
   };
 
   const handleStoreMethod = () => {
-    navigation.navigate('StoreMethod', { foodId });
+    navigation.navigate('StoreMethod', { foodId: food.foodName });
   };
+
+  // food.quantity가 숫자인지 확인하고 숫자로 변환
+  const quantity = parseFloat(food.quantity);
+  const isQuantityValid = !isNaN(quantity);
 
   return (
     <View style={styles.container}>
@@ -84,23 +116,28 @@ export default function FoodDetail({ route, navigation }) {
         <Text style={styles.title}>식품 정보</Text>
       </View>
       <View style={styles.foodInfoContainer}>
-        <Image source={food.image} style={styles.foodImage} />
+        <Image source={{ uri: placeholderImage }} style={styles.foodImage} />
         <View style={styles.foodInfo}>
-          <Text style={styles.foodName}>{food.foodname}</Text>
-          <Text style={styles.foodExpiry}>유통기한: {food.expiry}</Text>
-          <Text style={styles.foodExpiry}>갯수: {food.quantity}</Text>
+          <Text style={styles.foodName}>{food.foodName}</Text>
+          <Text style={styles.foodExpiry}>유통기한: {food.expirationDate}</Text>
+          <Text style={styles.foodQuantity}>갯수: {isQuantityValid ? food.quantity.toString() : '정보 없음'}</Text>
+          <Text style={styles.foodPrice}>가격: {food.price !== '정보 없음' ? `${food.price}원` : '정보 없음'}</Text>
         </View>
       </View>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>소비/배출</Text>
-        <Slider
-          value={consumptionValue}
-          onValueChange={setConsumptionValue}
-          minimumValue={0}
-          maximumValue={parseInt(food.quantity, 10)}
-          step={1}
-          style={styles.slider}
-        />
+        {isQuantityValid ? (
+          <Slider
+            value={consumptionValue}
+            onValueChange={setConsumptionValue}
+            minimumValue={0}
+            maximumValue={quantity}  // 유효한 수량만 Slider에 설정
+            step={1}
+            style={styles.slider}
+          />
+        ) : (
+          <Text>유효한 수량 정보가 없습니다.</Text>
+        )}
         <View style={styles.sliderValueContainer}>
           <Text style={styles.sliderValue}>{consumptionValue}</Text>
         </View>
@@ -132,7 +169,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F5F5',
   },
   header: {
     marginBottom: 16,
@@ -159,6 +196,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   foodExpiry: {
+    fontSize: 14,
+    color: '#888',
+  },
+  foodQuantity: {
+    fontSize: 14,
+    color: '#888',
+  },
+  foodPrice: {
     fontSize: 14,
     color: '#888',
   },
