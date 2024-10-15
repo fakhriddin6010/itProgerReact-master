@@ -66,38 +66,35 @@ export default function InquiryScreen({ route }) {
     }
   };
 
-// API orqali ma'lumotni olish uchun funksiya
-const fetchConsumptionDataByType = async (month, consumptionType, deviceId, setFilteredData, setLoading, setError) => {
-  setLoading(true);
-  setError(null);
+  const fetchConsumptionDataByType = async (month, consumptionType, deviceId, setFilteredData, setLoading, setError) => {
+    setLoading(true);
+    setError(null);
 
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/consumption-records/${deviceId}/month/type`, {
-      params: { year: 2024, month, consumptionType }
-    });
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/consumption-records/${deviceId}/month/type`, {
+        params: { year: 2024, month, consumptionType }
+      });
 
-    console.log('Consumption Type:', selectedType);
+      console.log('소비 유형:', selectedType);
 
-    const transformedData = response.data.map((item, index) => ({
-      key: `${item[0]}_${index}`, 
-      productName: item[0], // Noyob key: mahsulot nomi + indeks
-      value: item[1],
-      price: item[2], 
-      svg: { fill: getRandomColor() }
-    }));
+      const transformedData = response.data.map((item, index) => ({
+        key: `${item[0]}_${index}`,
+        productName: item[0], // 고유 key: 제품명 + 인덱스
+        value: item[1],
+        price: item[2],
+        svg: { fill: getRandomColor() }
+      }));
 
-    // sortedData ni tartiblaymiz
-    const sortedData = [...transformedData].sort((a, b) => b.value - a.value);
+      const sortedData = [...transformedData].sort((a, b) => b.value - a.value);
 
-    setFilteredData(sortedData); // Tartiblangan ma'lumotlar filteredData ga yuklanadi
-  } catch (error) {
-    console.log("Xatolik:", error); 
-    setError('Ma\'lumotlarni olishda xatolik. Iltimos, qaytadan urinib ko\'ring.');
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setFilteredData(sortedData);
+    } catch (error) {
+      console.log("데이터 가져오는 중 오류:", error);
+      setError('데이터를 가져오는 중 오류가 발생했습니다. 다시 시도해 주세요.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
@@ -117,55 +114,52 @@ const fetchConsumptionDataByType = async (month, consumptionType, deviceId, setF
     }
   };
 
-  // Pie chart uchun yorliq yaratish (nomlar chart ichida)
-const Labels = ({ slices }) =>
-  slices.map((slice, index) => {
-    const { pieCentroid, data } = slice;
+  const Labels = ({ slices }) =>
+    slices.map((slice, index) => {
+      const { pieCentroid, data } = slice;
+      const fontSize = data.value < 10 ? 11 : 12;
 
-    // Segment hajmiga qarab shrift o'lchamini sozlash
-    const fontSize = data.value < 10 ? 14 : 12; // Agar qiymat 10% dan kam bo'lsa, shriftni kattaroq qilamiz
+      return (
+        <G key={index}>
+          <SVGText
+            x={pieCentroid[0]}
+            y={pieCentroid[1]}
+            fill="white"
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            fontSize={fontSize}
+            fontWeight="bold"
+          >
+            {data.productName}
+          </SVGText>
+        </G>
+      );
+    });
 
-    return (
-      <G key={index}>
-        <SVGText
-          x={pieCentroid[0]}
-          y={pieCentroid[1]}
-          fill="white"
-          textAnchor="middle"
-          alignmentBaseline="middle"
-          fontSize={fontSize} // Mahsulot nomlari segment kattaligiga qarab ko'rsatiladi
-          fontWeight="bold"
-        >
-          {data.productName} {/* Mahsulot nomini ko'rsatish */}
-        </SVGText>
-      </G>
-    );
-  });
+  const totalValue = filteredData.reduce((acc, item) => acc + item.value, 0);
 
-    const totalValue = filteredData.reduce((acc, item) => acc + item.value, 0); // Umumiy qiymat
-    const PercentageList = ({ data }) => (
-      <View style={{ marginLeft: 20 }}>
-        {data.map((item, index) => (
-          <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
-            <View
-              style={{
-                width: 10,
-                height: 10,
-                backgroundColor: item.svg.fill, // Har bir mahsulot uchun rang
-                marginRight: 10,
-              }}
-            />
-            <Text style={{ fontSize: 14 }}>
-              {item.productName} {/* Mahsulot nomi */}
-            </Text>
-            <Text style={{ fontSize: 14, marginLeft: 5 }}>
-              {(item.value / totalValue * 100).toFixed(1)}% {/* To'g'ri foiz hisoblash */}
-            </Text>
-          </View>
-        ))}
-      </View>
-    );
-    
+  const PercentageList = ({ data }) => (
+    <View style={{ marginLeft: 20 }}>
+      {data.map((item, index) => (
+        <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              backgroundColor: item.svg.fill,
+              marginRight: 10,
+            }}
+          />
+          <Text style={{ fontSize: 14 }}>
+            {item.productName}
+          </Text>
+          <Text style={{ fontSize: 14, marginLeft: 5 }}>
+            {(item.value / totalValue * 100).toFixed(1)}%
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 
   return (
     <FlatList
@@ -173,9 +167,11 @@ const Labels = ({ slices }) =>
       contentContainerStyle={{ paddingBottom: 80 }}
       ListHeaderComponent={(
         <View>
-          <Text style={styles.header}>통계 및 조회</Text>
-          <View style={styles.filterContainer}>
-            <Text style={styles.filterLabel}>월을 선택하세요:</Text>
+          <View style={styles.headerContainer}>
+            <Text style={styles.header}>통계 및 조회</Text>
+          </View>
+          <View style={styles.pickerContainer}>
+            <Text style={styles.filterLabel }>월을 선택하세요:</Text>
             <Picker
               selectedValue={selectedMonth}
               style={styles.picker}
@@ -248,24 +244,44 @@ const Labels = ({ slices }) =>
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  filterContainer: { marginBottom: 20 },
-  filterLabel: { fontSize: 16, fontWeight: 'bold', marginVertical: 10 },
-  picker: { height: 50, width: '100%' },
+  container: { flex:1, padding: 20, backgroundColor: '#f5f5f5' },
+  headerContainer: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  header: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+  pickerContainer: {
+    backgroundColor: '#fff',
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 5,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    alignItems: 'center'
+  },
+  filterLabel: { fontSize: 16, fontWeight: 'bold', marginBottom: 5},
+  picker: { height: 30, width: '60%', marginBottom:9 },
   tabContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 },
   tabButton: { padding: 10, borderRadius: 8, backgroundColor: '#ddd' },
   activeTabButton: { backgroundColor: '#888' },
   tabText: { fontSize: 16, color: '#fff' },
-  chartContainer: { marginBottom: 20, padding: 10, backgroundColor: '#fff', borderRadius: 10 },
-  chartTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+  analysisContainer: { marginTop: 20, padding: 10, backgroundColor: '#fff', borderRadius: 10, marginBottom: 20 },
+  analysisTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  analysisText: { fontSize: 16, color: '#333' },
   noDataText: { fontSize: 18, color: '#FF6347', textAlign: 'center', marginVertical: 20 },
   listItem: { padding: 15, backgroundColor: '#fff', borderRadius: 10, marginBottom: 10 },
   listItemText: { fontSize: 16, fontWeight: '600' },
   listItemCost: { fontSize: 14, color: '#444', marginTop: 5 },
   errorText: { color: 'red', textAlign: 'center', marginVertical: 20 },
-  analysisContainer: { marginTop: 20, padding: 10, backgroundColor: '#fff', borderRadius: 10, marginBottom: 20 },
-  analysisTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  analysisText: { fontSize: 16, color: '#333' },
 });
-
