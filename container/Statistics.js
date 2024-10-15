@@ -4,71 +4,101 @@ import { Picker } from '@react-native-picker/picker';
 import { PieChart } from 'react-native-svg-charts';
 import { G, Text as SVGText } from 'react-native-svg';
 import { useIsFocused } from '@react-navigation/native';
-import * as Device from 'expo-device'; 
+import * as Device from 'expo-device';
 import axios from 'axios';
-import API_BASE_URL from './config'; 
+import API_BASE_URL from './config';
 
 const getCurrentMonth = () => {
   const now = new Date();
   return { year: now.getFullYear(), month: now.getMonth() + 1 };
 };
 
-// InquiryScreen - 여기에서 상품 통계가 표시됩니다.
 export default function InquiryScreen({ route }) {
-  const [filteredData, setFilteredData] = useState([]); 
+  const [filteredData, setFilteredData] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth().month);
   const [selectedType, setSelectedType] = useState('CONSUMED');
-  const [selectedTab, setSelectedTab] = useState('소비'); 
-  const [loading, setLoading] = useState(false); 
-  const [error, setError] = useState(null); 
-  const [deviceId, setDeviceId] = useState('');  
-  const isFocused = useIsFocused(); 
+  const [selectedTab, setSelectedTab] = useState('소비');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [consumptionAnalysis, setConsumptionAnalysis] = useState('');
+  const [wasteAnalysis, setWasteAnalysis] = useState('');
+  const [deviceId, setDeviceId] = useState('');
+  const isFocused = useIsFocused();
 
-  // 장치 ID를 얻는 hook
   useEffect(() => {
     const getDeviceId = () => {
       const id = Device.modelId || Device.osInternalBuildId || 'unknown-device';
-      setDeviceId(id);  // 장치 ID를 상태에 저장
+      setDeviceId(id);
     };
-    getDeviceId(); // 장치 ID를 얻기
+    getDeviceId();
   }, []);
 
-  // API를 통해 데이터를 가져오고 화면 포커스를 감시
   useEffect(() => {
     if ((route.params?.refresh || isFocused) && deviceId) {
       fetchConsumptionDataByType(selectedMonth, selectedType, deviceId, setFilteredData, setLoading, setError);
+      if (selectedType === 'CONSUMED') {
+        fetchConsumptionAnalysis(selectedMonth, deviceId);
+      } else if (selectedType === 'DISCARDED') {
+        fetchWasteAnalysis(selectedMonth, deviceId);
+      }
     }
   }, [route.params?.refresh, isFocused, selectedMonth, selectedType, deviceId]);
 
-  // API를 통해 데이터를 가져오는 함수
-  const fetchConsumptionDataByType = async (month, consumptionType, deviceId, setFilteredData, setLoading, setError) => {
-    setLoading(true);
-    setError(null);
-  
+  const fetchConsumptionAnalysis = async (month, deviceId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/consumption-records/${deviceId}/month/type`, {
-        params: { year: 2024, month, consumptionType }
+      const response = await axios.get(`${API_BASE_URL}/api/consumption-records/${deviceId}/month/consumption-analysis`, {
+        params: { year: 2024, month }
       });
-      console.log('소비 유형:', selectedType);  
-
-      const transformedData = response.data.map((item, index) => ({
-        key: `${item[0]}_${index}`, 
-        productName: item[0], // 고유 키: 상품명 + 인덱스
-        value: item[1],
-        price: item[2], 
-        svg: { fill: getRandomColor() }
-      }));
-  
-      setFilteredData(transformedData);
+      setConsumptionAnalysis(response.data);
     } catch (error) {
-      console.log("오류:", error);  
-      setError('데이터를 가져오는 중 오류가 발생했습니다. 다시 시도해 주세요.');
-    } finally {
-      setLoading(false);
+      console.error('소비 분석 오류:', error);
     }
   };
 
-  // 랜덤 색상을 생성하는 함수
+  const fetchWasteAnalysis = async (month, deviceId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/consumption-records/${deviceId}/month/waste-analysis`, {
+        params: { year: 2024, month }
+      });
+      setWasteAnalysis(response.data);
+    } catch (error) {
+      console.error('폐기 분석 오류:', error);
+    }
+  };
+
+// API orqali ma'lumotni olish uchun funksiya
+const fetchConsumptionDataByType = async (month, consumptionType, deviceId, setFilteredData, setLoading, setError) => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/consumption-records/${deviceId}/month/type`, {
+      params: { year: 2024, month, consumptionType }
+    });
+
+    console.log('Consumption Type:', selectedType);
+
+    const transformedData = response.data.map((item, index) => ({
+      key: `${item[0]}_${index}`, 
+      productName: item[0], // Noyob key: mahsulot nomi + indeks
+      value: item[1],
+      price: item[2], 
+      svg: { fill: getRandomColor() }
+    }));
+
+    // sortedData ni tartiblaymiz
+    const sortedData = [...transformedData].sort((a, b) => b.value - a.value);
+
+    setFilteredData(sortedData); // Tartiblangan ma'lumotlar filteredData ga yuklanadi
+  } catch (error) {
+    console.log("Xatolik:", error); 
+    setError('Ma\'lumotlarni olishda xatolik. Iltimos, qaytadan urinib ko\'ring.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -81,15 +111,20 @@ export default function InquiryScreen({ route }) {
   const handleTabChange = (tab) => {
     setSelectedTab(tab);
     if (tab === '소비') {
-      setSelectedType('CONSUMED'); // 소비 유형
+      setSelectedType('CONSUMED');
     } else if (tab === '폐기') {
-      setSelectedType('DISCARDED'); // 폐기 유형
+      setSelectedType('DISCARDED');
     }
   };
 
-  // PieChart에 라벨을 생성하는 함수
-  const Labels = ({ slices }) => slices.map((slice, index) => {
+  // Pie chart uchun yorliq yaratish (nomlar chart ichida)
+const Labels = ({ slices }) =>
+  slices.map((slice, index) => {
     const { pieCentroid, data } = slice;
+
+    // Segment hajmiga qarab shrift o'lchamini sozlash
+    const fontSize = data.value < 10 ? 14 : 12; // Agar qiymat 10% dan kam bo'lsa, shriftni kattaroq qilamiz
+
     return (
       <G key={index}>
         <SVGText
@@ -98,25 +133,47 @@ export default function InquiryScreen({ route }) {
           fill="white"
           textAnchor="middle"
           alignmentBaseline="middle"
-          fontSize={12}
+          fontSize={fontSize} // Mahsulot nomlari segment kattaligiga qarab ko'rsatiladi
           fontWeight="bold"
-          stroke="black"
-          strokeWidth={0.5}
         >
-          {data.productName} {/* 상품명 표시 */}
+          {data.productName} {/* Mahsulot nomini ko'rsatish */}
         </SVGText>
       </G>
     );
   });
 
+    const totalValue = filteredData.reduce((acc, item) => acc + item.value, 0); // Umumiy qiymat
+    const PercentageList = ({ data }) => (
+      <View style={{ marginLeft: 20 }}>
+        {data.map((item, index) => (
+          <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+            <View
+              style={{
+                width: 10,
+                height: 10,
+                backgroundColor: item.svg.fill, // Har bir mahsulot uchun rang
+                marginRight: 10,
+              }}
+            />
+            <Text style={{ fontSize: 14 }}>
+              {item.productName} {/* Mahsulot nomi */}
+            </Text>
+            <Text style={{ fontSize: 14, marginLeft: 5 }}>
+              {(item.value / totalValue * 100).toFixed(1)}% {/* To'g'ri foiz hisoblash */}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
+    
+
   return (
     <FlatList
       style={styles.container}
+      contentContainerStyle={{ paddingBottom: 80 }}
       ListHeaderComponent={(
         <View>
           <Text style={styles.header}>통계 및 조회</Text>
-  
-          {/* 월 선택 */} 
           <View style={styles.filterContainer}>
             <Text style={styles.filterLabel}>월을 선택하세요:</Text>
             <Picker
@@ -129,8 +186,6 @@ export default function InquiryScreen({ route }) {
               ))}
             </Picker>
           </View>
-  
-          {/* '소비'와 '폐기' 선택 버튼 */}
           <View style={styles.tabContainer}>
             {['소비', '폐기'].map(tab => (
               <TouchableOpacity
@@ -142,20 +197,17 @@ export default function InquiryScreen({ route }) {
               </TouchableOpacity>
             ))}
           </View>
-  
           {loading ? (
-            <ActivityIndicator size="large" color="#0000ff" /> 
+            <ActivityIndicator size="large" color="#0000ff" />
           ) : error ? (
-            <Text style={styles.errorText}>{error}</Text> 
+            <Text style={styles.errorText}>{error}</Text>
           ) : filteredData.length === 0 ? (
-            <Text style={styles.noDataText}>데이터가 없습니다</Text> 
+            <Text style={styles.noDataText}>데이터가 없습니다</Text>
           ) : (
             <View>
-              {/* PieChart */}
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>{selectedTab} 차트</Text>
+              <View style={{ flexDirection: 'row' }}>
                 <PieChart
-                  style={{ height: 250 }}
+                  style={{ height: 250, flex: 1 }}
                   data={filteredData}
                   innerRadius="50%"
                   outerRadius="90%"
@@ -163,17 +215,30 @@ export default function InquiryScreen({ route }) {
                 >
                   <Labels />
                 </PieChart>
+                <PercentageList data={filteredData} />
               </View>
+              {selectedType === 'CONSUMED' && consumptionAnalysis && (
+                <View style={styles.analysisContainer}>
+                  <Text style={styles.analysisTitle}>소비 분석</Text>
+                  <Text style={styles.analysisText}>{consumptionAnalysis}</Text>
+                </View>
+              )}
+              {selectedType === 'DISCARDED' && wasteAnalysis && (
+                <View style={styles.analysisContainer}>
+                  <Text style={styles.analysisTitle}>폐기 분석</Text>
+                  <Text style={styles.analysisText}>{wasteAnalysis}</Text>
+                </View>
+              )}
             </View>
           )}
         </View>
       )}
       data={filteredData}
-      keyExtractor={(item) => item.key}  // React에 고유 키 부여
+      keyExtractor={(item) => item.key}
       renderItem={({ item }) => (
         <View style={styles.listItem}>
           <Text style={styles.listItemText}>
-            {item.productName}: {item.value} 개  {/* 사용자에게 상품명 표시 */}
+            {item.productName}: {item.value} 개
           </Text>
           <Text style={styles.listItemCost}>가격: {item.price || 0}원</Text>
         </View>
@@ -199,4 +264,8 @@ const styles = StyleSheet.create({
   listItemText: { fontSize: 16, fontWeight: '600' },
   listItemCost: { fontSize: 14, color: '#444', marginTop: 5 },
   errorText: { color: 'red', textAlign: 'center', marginVertical: 20 },
+  analysisContainer: { marginTop: 20, padding: 10, backgroundColor: '#fff', borderRadius: 10, marginBottom: 20 },
+  analysisTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  analysisText: { fontSize: 16, color: '#333' },
 });
+
